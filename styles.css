@@ -65,6 +65,87 @@ body::after {
   z-index: -1;
 }
 
+.lead-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5, 5, 5, 0.72);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.lead-modal.active {
+  display: flex;
+}
+
+.lead-card {
+  width: min(560px, 92vw);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  background: linear-gradient(160deg, rgba(18, 18, 18, 0.98), rgba(8, 8, 8, 0.96));
+  border: 1px solid rgba(255, 42, 42, 0.4);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+  display: grid;
+  gap: 16px;
+  animation: riseIn 0.35s ease;
+}
+
+.lead-header h2 {
+  font-family: var(--font-title);
+  font-size: 36px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.lead-header p {
+  color: var(--muted);
+}
+
+.lead-form {
+  display: grid;
+  gap: 10px;
+}
+
+.lead-form input,
+.lead-form select,
+.lead-form textarea {
+  width: 100%;
+  background: rgba(7, 7, 7, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 12px 14px;
+  font-family: var(--font-body);
+}
+
+.lead-form input:focus,
+.lead-form select:focus,
+.lead-form textarea:focus {
+  outline: 2px solid rgba(255, 42, 42, 0.4);
+  border-color: transparent;
+}
+
+.lead-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .app-shell {
   max-width: 1180px;
   margin: 0 auto;
@@ -380,6 +461,16 @@ body::after {
   min-height: 130px;
 }
 
+.question-form input,
+.question-form select {
+  background: rgba(7, 7, 7, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 12px;
+  font-family: var(--font-body);
+}
+
 .question-form textarea:focus {
   outline: 2px solid rgba(255, 42, 42, 0.4);
   border-color: transparent;
@@ -522,6 +613,10 @@ body::after {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .lead-actions {
+    flex-direction: column;
   }
 
   .hero-actions {

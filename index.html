@@ -11,6 +11,45 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="lead-modal" id="leadModal" aria-hidden="true">
+      <div class="lead-card" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
+        <div class="lead-header">
+          <h2 id="leadTitle">Запросить расчет</h2>
+          <p>Заполните короткую форму — это поможет быстрее подготовить предложение.</p>
+        </div>
+        <form class="lead-form" id="leadForm">
+          <label class="form-label" for="leadName">Имя</label>
+          <input id="leadName" name="name" type="text" placeholder="Как к вам обращаться" />
+
+          <label class="form-label" for="leadProject">Проект / ниша</label>
+          <input id="leadProject" name="project" type="text" placeholder="Например: онлайн‑школа, e‑commerce, сервис" />
+
+          <label class="form-label" for="leadGoal">Цель</label>
+          <textarea id="leadGoal" name="goal" rows="3" placeholder="Рост подписчиков, лиды, продажи, медиа"></textarea>
+
+          <label class="form-label" for="leadBudget">Бюджет</label>
+          <select id="leadBudget" name="budget">
+            <option value="">Укажите диапазон</option>
+            <option value="до 50k">до 50 000 ₽</option>
+            <option value="50-150k">50 000 – 150 000 ₽</option>
+            <option value="150-300k">150 000 – 300 000 ₽</option>
+            <option value="300k+">300 000 ₽ +</option>
+          </select>
+
+          <label class="form-label" for="leadContact">Контакт для связи</label>
+          <input id="leadContact" name="contact" type="text" placeholder="@username, телефон или email" />
+
+          <div class="lead-actions">
+            <button class="primary-btn" type="submit">Отправить</button>
+            <button class="ghost-btn" type="button" id="leadSkip">Позже</button>
+          </div>
+          <p class="form-note">
+            Часть данных можем получить автоматически из Telegram (имя, username).
+          </p>
+        </form>
+      </div>
+    </div>
+
     <div class="app-shell">
       <header class="topbar">
         <div class="brand">

@@ -4,6 +4,12 @@ const cartBar = document.querySelector(".cart-bar");
 const addButtons = document.querySelectorAll("[data-add]");
 const questionForm = document.getElementById("questionForm");
 const questionInput = document.getElementById("questionInput");
+const leadModal = document.getElementById("leadModal");
+const leadForm = document.getElementById("leadForm");
+const leadSkip = document.getElementById("leadSkip");
+
+const APP_BACKEND_URL = "";
+const LEAD_STORAGE_KEY = "leadFormCompleted_v1";
 
 let total = 0;
 
@@ -33,13 +39,136 @@ if (!addButtons.length && cartBar) {
   cartBar.classList.add("hidden");
 }
 
-const sendQuestionToBot = (message) => {
-  const payload = JSON.stringify({ type: "question", message });
-  if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.sendData(payload);
-    window.Telegram.WebApp.showAlert("Запрос отправлен. Ответ придет в чат с ботом.");
-  } else {
-    alert("Запрос отправлен. Ответ придет в чат с ботом.");
+const getWebApp = () => (window.Telegram ? window.Telegram.WebApp : null);
+
+const fillLeadForm = () => {
+  if (!leadForm) return;
+  const nameInput = document.getElementById("leadName");
+  const contactInput = document.getElementById("leadContact");
+  const webapp = getWebApp();
+  const user = webapp?.initDataUnsafe?.user;
+  if (user && nameInput && !nameInput.value) {
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+    nameInput.value = fullName || "";
+  }
+  if (user && user.username && contactInput && !contactInput.value) {
+    contactInput.value = `@${user.username}`;
+  }
+};
+
+const openLeadModal = () => {
+  if (!leadModal) return;
+  leadModal.classList.add("active");
+  leadModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  fillLeadForm();
+};
+
+const closeLeadModal = () => {
+  if (!leadModal) return;
+  leadModal.classList.remove("active");
+  leadModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+};
+
+if (leadModal && !localStorage.getItem(LEAD_STORAGE_KEY)) {
+  setTimeout(openLeadModal, 300);
+}
+
+if (leadSkip) {
+  leadSkip.addEventListener("click", () => {
+    localStorage.setItem(LEAD_STORAGE_KEY, "1");
+    closeLeadModal();
+  });
+}
+
+if (leadForm) {
+  leadForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(leadForm);
+    const payload = {
+      type: "lead",
+      name: formData.get("name"),
+      project: formData.get("project"),
+      goal: formData.get("goal"),
+      budget: formData.get("budget"),
+      contact: formData.get("contact"),
+      created_at: new Date().toISOString(),
+    };
+    const webapp = getWebApp();
+    if (webapp?.initDataUnsafe?.user) {
+      payload.user = webapp.initDataUnsafe.user;
+    }
+    const queryId = webapp?.initDataUnsafe?.query_id;
+
+    try {
+      if (queryId && APP_BACKEND_URL) {
+        await fetch(`${APP_BACKEND_URL}/webapp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query_id: queryId,
+            init_data: webapp?.initData || "",
+            payload,
+          }),
+        });
+      } else if (webapp && webapp.sendData) {
+        webapp.sendData(JSON.stringify(payload));
+      }
+      localStorage.setItem(LEAD_STORAGE_KEY, "1");
+      closeLeadModal();
+      if (webapp) {
+        webapp.showAlert("Спасибо! Мы получили запрос.");
+      } else {
+        alert("Спасибо! Мы получили запрос.");
+      }
+    } catch (error) {
+      if (webapp) {
+        webapp.showAlert("Не удалось отправить форму. Попробуйте позже.");
+      } else {
+        alert("Не удалось отправить форму. Попробуйте позже.");
+      }
+    }
+  });
+}
+
+const sendPayload = async (payload) => {
+  const webapp = getWebApp();
+  const queryId = webapp?.initDataUnsafe?.query_id;
+  if (queryId && APP_BACKEND_URL) {
+    await fetch(`${APP_BACKEND_URL}/webapp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query_id: queryId,
+        init_data: webapp?.initData || "",
+        payload,
+      }),
+    });
+    return;
+  }
+  if (webapp && webapp.sendData) {
+    webapp.sendData(JSON.stringify(payload));
+    return;
+  }
+  throw new Error("No transport for payload");
+};
+
+const sendQuestionToBot = async (message) => {
+  const payload = { type: "question", message, created_at: new Date().toISOString() };
+  try {
+    await sendPayload(payload);
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.showAlert("Запрос отправлен. Ответ придет в чат с ботом.");
+    } else {
+      alert("Запрос отправлен. Ответ придет в чат с ботом.");
+    }
+  } catch (error) {
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.showAlert("Не удалось отправить запрос. Попробуйте позже.");
+    } else {
+      alert("Не удалось отправить запрос. Попробуйте позже.");
+    }
   }
 };
 

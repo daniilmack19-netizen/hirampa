@@ -1,3 +1,8 @@
 .DS_Store
 preview-desktop.png
 photo_2026-02-08 23.35.58.jpeg
+assets/logo.svg
+github_deploy_key
+github_deploy_key.pub
+known_hosts
+ssh.config
