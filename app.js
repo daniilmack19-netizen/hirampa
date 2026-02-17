@@ -8,7 +8,7 @@ const leadModal = document.getElementById("leadModal");
 const leadForm = document.getElementById("leadForm");
 const leadSkip = document.getElementById("leadSkip");
 
-const APP_BACKEND_URL = "";
+const APP_BACKEND_URL = window.APP_CONFIG?.backendUrl || "";
 const LEAD_STORAGE_KEY = "leadFormCompleted_v1";
 
 let total = 0;
