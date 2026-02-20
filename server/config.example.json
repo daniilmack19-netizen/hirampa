@@ -1,6 +1,7 @@
 {
   "bot_token": "PASTE_TELEGRAM_BOT_TOKEN",
   "admin_username": "admin_username_without_at",
+  "admin_chat_id": "",
   "webapp_url": "https://daniilmack19-netizen.github.io/hirampa/",
   "public_base_url": "https://your-domain.example",
   "cors_origin": "*",

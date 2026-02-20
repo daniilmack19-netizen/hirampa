@@ -22,6 +22,7 @@ cp /Users/daniilrylcev/Documents/New\ project\ 2/server/config.example.json \
 В `server/config.json` заполните:
 - `bot_token` — токен от @BotFather
 - `admin_username` — юзернейм админа без `@`
+- `admin_chat_id` — опционально. Рекомендуется для стабильности после перезапусков.
 - `webapp_url` — URL вашего WebApp
 - `public_base_url` — публичный адрес сервера (HTTPS)
 
@@ -29,11 +30,14 @@ cp /Users/daniilrylcev/Documents/New\ project\ 2/server/config.example.json \
 Можно не создавать `config.json`, а задать переменные окружения:
 - `BOT_TOKEN`
 - `ADMIN_USERNAME`
+- `ADMIN_CHAT_ID` (опционально, рекомендовано)
 - `WEBAPP_URL`
 - `PUBLIC_BASE_URL`
 - `PORT` (обычно выставляет сам хостинг)
 
-Важно: админ должен **написать боту /start**, иначе бот не сможет отправить ему сообщение.
+Важно:
+- админ должен написать боту `/start` (это привяжет chat_id по `admin_username`);
+- можно получить chat_id командой `/myid` и сохранить его в `ADMIN_CHAT_ID`.
 
 ### 3) Запуск сервера
 ```bash

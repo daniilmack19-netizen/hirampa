@@ -4,6 +4,7 @@ import hmac
 import hashlib
 import urllib.parse
 import urllib.request
+import urllib.error
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Dict, Optional
 
@@ -25,7 +26,8 @@ def cfg(name: str, default: Any = "") -> Any:
 
 BOT_TOKEN = str(cfg("bot_token", "")).strip()
 ADMIN_USERNAME = str(cfg("admin_username", "")).strip().lstrip("@")
-ADMIN_CHAT_ID = cfg("admin_chat_id")
+_admin_chat_id_raw = cfg("admin_chat_id")
+ADMIN_CHAT_ID = int(_admin_chat_id_raw) if str(_admin_chat_id_raw).strip() else None
 WEBAPP_URL = str(cfg("webapp_url", "")).strip()
 LISTEN_HOST = str(cfg("listen_host", "0.0.0.0"))
 LISTEN_PORT = int(os.getenv("PORT", cfg("listen_port", 8080)))
@@ -44,8 +46,17 @@ def api_request(method: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     req = urllib.request.Request(
         url, data=data, headers={"Content-Type": "application/json"}
     )
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        return json.load(resp)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError as error:
+        body = error.read().decode("utf-8", "replace")
+        try:
+            parsed = json.loads(body)
+            description = parsed.get("description", body)
+        except json.JSONDecodeError:
+            description = body or str(error)
+        raise RuntimeError(f"Telegram API {method} failed: {description}")
 
 
 def resolve_admin_chat_id() -> Optional[int]:
@@ -121,7 +132,7 @@ def send_to_admin(payload: Dict[str, Any]) -> None:
     chat_id = resolve_admin_chat_id()
     if not chat_id:
         raise RuntimeError(
-            "Admin chat_id not resolved. Admin must open the bot and send /start."
+            "Admin chat_id not resolved. Check admin_username and send /start from admin account."
         )
     text = format_payload(payload)
     api_request(
@@ -187,26 +198,38 @@ def handle_telegram_update(update: Dict[str, Any]) -> None:
         ADMIN_CHAT_ID = message["chat"]["id"]
 
     text = message.get("text", "")
-    if text.startswith("/start"):
-        if not WEBAPP_URL:
-            api_request(
-                "sendMessage",
-                {
-                    "chat_id": message["chat"]["id"],
-                    "text": "WebApp URL не настроен. Заполните webapp_url в config.json.",
-                },
-            )
-            return
+    if text.startswith("/myid"):
         api_request(
             "sendMessage",
             {
                 "chat_id": message["chat"]["id"],
-                "text": "Открыть приложение:",
-                "reply_markup": {
-                    "inline_keyboard": [[{"text": "Открыть WebApp", "web_app": {"url": WEBAPP_URL}}]]
-                },
+                "text": (
+                    f"chat_id: <code>{message['chat']['id']}</code>\\n"
+                    f"username: @{username if username else '-'}\\n"
+                    f"admin_bound: {'yes' if ADMIN_CHAT_ID else 'no'}"
+                ),
+                "parse_mode": "HTML",
             },
         )
+        return
+
+    if text.startswith("/start"):
+        parts = []
+        if ADMIN_CHAT_ID and ADMIN_USERNAME and username.lower() == ADMIN_USERNAME.lower():
+            parts.append("Админ-чат привязан.")
+        if not WEBAPP_URL:
+            parts.append("WebApp URL не настроен. Заполните webapp_url.")
+        else:
+            parts.append("Открыть приложение:")
+        response = {
+            "chat_id": message["chat"]["id"],
+            "text": "\\n".join(parts),
+        }
+        if WEBAPP_URL:
+            response["reply_markup"] = {
+                "inline_keyboard": [[{"text": "Открыть WebApp", "web_app": {"url": WEBAPP_URL}}]]
+            }
+        api_request("sendMessage", response)
         return
 
     web_app_data = message.get("web_app_data")
