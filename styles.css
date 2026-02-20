@@ -69,9 +69,11 @@ body::after {
   position: fixed;
   inset: 0;
   display: none;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 24px;
+  padding: calc(14px + env(safe-area-inset-top)) 14px
+    calc(14px + env(safe-area-inset-bottom));
+  overflow-y: auto;
   background: rgba(5, 5, 5, 0.72);
   backdrop-filter: blur(10px);
   z-index: 100;
@@ -82,7 +84,7 @@ body::after {
 }
 
 .lead-card {
-  width: min(560px, 92vw);
+  width: min(560px, 100%);
   border-radius: var(--radius-lg);
   padding: 24px;
   background: linear-gradient(160deg, rgba(18, 18, 18, 0.98), rgba(8, 8, 8, 0.96));
@@ -92,6 +94,9 @@ body::after {
   gap: 16px;
   animation: riseIn 0.35s ease;
   position: relative;
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-close {
@@ -629,10 +634,25 @@ body::after {
   }
 }
 
+@media (min-width: 768px) {
+  .lead-modal {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .lead-card {
+    max-height: min(86dvh, 820px);
+  }
+}
+
 @media (max-width: 600px) {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .lead-card {
+    padding: 18px;
   }
 
   .lead-actions {

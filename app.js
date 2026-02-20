@@ -5,6 +5,7 @@ const addButtons = document.querySelectorAll("[data-add]");
 const questionForm = document.getElementById("questionForm");
 const questionInput = document.getElementById("questionInput");
 const leadModal = document.getElementById("leadModal");
+const leadCard = document.querySelector(".lead-card");
 const leadForm = document.getElementById("leadForm");
 const leadSkip = document.getElementById("leadSkip");
 const leadClose = document.getElementById("leadClose");
@@ -96,6 +97,9 @@ const openLeadModal = () => {
   if (!leadModal) return;
   leadModal.classList.add("active");
   leadModal.setAttribute("aria-hidden", "false");
+  if (leadCard) {
+    leadCard.scrollTop = 0;
+  }
   document.body.style.overflow = "hidden";
   fillLeadForm();
 };
@@ -202,6 +206,15 @@ const sendPayload = async (payload) => {
 };
 
 if (leadForm) {
+  const modalFields = leadForm.querySelectorAll("input, textarea, select");
+  modalFields.forEach((field) => {
+    field.addEventListener("focus", () => {
+      setTimeout(() => {
+        field.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 120);
+    });
+  });
+
   leadForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(leadForm);
