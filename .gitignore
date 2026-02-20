@@ -13,4 +13,5 @@ github_deploy_key_2.pub
 known_hosts
 ssh.config
 server/config.json
+server/leads_store.json
 server/__pycache__/

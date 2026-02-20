@@ -2,9 +2,13 @@
   "bot_token": "PASTE_TELEGRAM_BOT_TOKEN",
   "admin_username": "admin_username_without_at",
   "admin_chat_id": "",
+  "strict_admin_check": true,
   "webapp_url": "https://daniilmack19-netizen.github.io/hirampa/",
   "public_base_url": "https://your-domain.example",
   "cors_origin": "*",
+  "storage_path": "leads_store.json",
+  "storage_retention_days": 30,
+  "max_stored_items": 3000,
   "listen_host": "0.0.0.0",
   "listen_port": 8080,
   "verify_init_data": false

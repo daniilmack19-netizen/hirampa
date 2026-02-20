@@ -245,6 +245,10 @@ if (leadForm) {
 
 const sendQuestionToBot = async (message) => {
   const payload = { type: "question", message, created_at: new Date().toISOString() };
+  const webapp = getWebApp();
+  if (webapp?.initDataUnsafe?.user) {
+    payload.user = webapp.initDataUnsafe.user;
+  }
   try {
     await sendPayload(payload);
     notifyUser("Запрос отправлен. Ответ придет в чат с ботом.");
