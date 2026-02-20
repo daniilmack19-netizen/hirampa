@@ -3,6 +3,7 @@
   "admin_username": "admin_username_without_at",
   "webapp_url": "https://daniilmack19-netizen.github.io/hirampa/",
   "public_base_url": "https://your-domain.example",
+  "cors_origin": "*",
   "listen_host": "0.0.0.0",
   "listen_port": 8080,
   "verify_init_data": false

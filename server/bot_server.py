@@ -30,6 +30,7 @@ WEBAPP_URL = str(cfg("webapp_url", "")).strip()
 LISTEN_HOST = str(cfg("listen_host", "0.0.0.0"))
 LISTEN_PORT = int(os.getenv("PORT", cfg("listen_port", 8080)))
 VERIFY_INIT_DATA = str(cfg("verify_init_data", "false")).lower() in {"1", "true", "yes"}
+CORS_ORIGIN = str(cfg("cors_origin", "*")).strip() or "*"
 
 if not BOT_TOKEN:
     raise SystemExit("bot_token is required (env BOT_TOKEN or server/config.json)")
@@ -210,13 +211,26 @@ def handle_telegram_update(update: Dict[str, Any]) -> None:
 
 
 class RequestHandler(BaseHTTPRequestHandler):
+    def _set_cors_headers(self) -> None:
+        self.send_header("Access-Control-Allow-Origin", CORS_ORIGIN)
+        self.send_header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Vary", "Origin")
+
     def _send_json(self, status: int, data: Dict[str, Any]) -> None:
         body = json.dumps(data).encode("utf-8")
         self.send_response(status)
+        self._set_cors_headers()
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        self._set_cors_headers()
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_GET(self) -> None:
         if self.path == "/health":

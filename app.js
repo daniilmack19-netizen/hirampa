@@ -48,6 +48,18 @@ const isTelegramContext = () => {
   if (typeof webapp.initData === "string" && webapp.initData.length > 0) return true;
   return /Telegram/i.test(navigator.userAgent);
 };
+const notifyUser = (message) => {
+  const webapp = getWebApp();
+  if (webapp && typeof webapp.showAlert === "function") {
+    try {
+      webapp.showAlert(message);
+      return;
+    } catch (error) {
+      // Fallback to native alert below.
+    }
+  }
+  alert(message);
+};
 
 const storageGet = (key) => {
   try {
@@ -156,7 +168,7 @@ const sendPayload = async (payload) => {
   const webapp = getWebApp();
   const queryId = webapp?.initDataUnsafe?.query_id;
   if (APP_BACKEND_URL) {
-    await fetch(`${APP_BACKEND_URL}/webapp`, {
+    const response = await fetch(`${APP_BACKEND_URL}/webapp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -165,6 +177,9 @@ const sendPayload = async (payload) => {
         payload,
       }),
     });
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+    }
     return;
   }
   if (webapp && webapp.sendData) {
@@ -196,17 +211,9 @@ if (leadForm) {
       await sendPayload(payload);
       storageSet(LEAD_STORAGE_KEY, "1");
       closeLeadModal();
-      if (webapp) {
-        webapp.showAlert("Спасибо! Мы получили запрос.");
-      } else {
-        alert("Спасибо! Мы получили запрос.");
-      }
+      notifyUser("Спасибо! Мы получили запрос.");
     } catch (error) {
-      if (webapp) {
-        webapp.showAlert("Не удалось отправить форму. Попробуйте позже.");
-      } else {
-        alert("Не удалось отправить форму. Попробуйте позже.");
-      }
+      notifyUser("Не удалось отправить форму. Попробуйте позже.");
     }
   });
 }
@@ -215,17 +222,9 @@ const sendQuestionToBot = async (message) => {
   const payload = { type: "question", message, created_at: new Date().toISOString() };
   try {
     await sendPayload(payload);
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.showAlert("Запрос отправлен. Ответ придет в чат с ботом.");
-    } else {
-      alert("Запрос отправлен. Ответ придет в чат с ботом.");
-    }
+    notifyUser("Запрос отправлен. Ответ придет в чат с ботом.");
   } catch (error) {
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.showAlert("Не удалось отправить запрос. Попробуйте позже.");
-    } else {
-      alert("Не удалось отправить запрос. Попробуйте позже.");
-    }
+    notifyUser("Не удалось отправить запрос. Попробуйте позже.");
   }
 };
 
@@ -234,11 +233,7 @@ if (questionForm) {
     event.preventDefault();
     const message = questionInput.value.trim();
     if (!message) {
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.showAlert("Напишите вопрос перед отправкой.");
-      } else {
-        alert("Напишите вопрос перед отправкой.");
-      }
+      notifyUser("Напишите вопрос перед отправкой.");
       return;
     }
     sendQuestionToBot(message);
@@ -249,13 +244,7 @@ if (questionForm) {
 if (payBtn) {
   payBtn.addEventListener("click", () => {
     if (!total) return;
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.showAlert(
-        "Оплата звездами подключается через инвойс. Мы подготовим ее на этапе интеграции."
-      );
-    } else {
-      alert("Оплата звездами будет доступна в Telegram WebApp.");
-    }
+    notifyUser("Оплата звездами подключается через инвойс. Мы подготовим ее на этапе интеграции.");
   });
 }
 
