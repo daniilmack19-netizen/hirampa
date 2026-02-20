@@ -1,3 +1,3 @@
 window.APP_CONFIG = {
-  backendUrl: "",
+  backendUrl: "https://rampa-bot.onrender.com",
 };
