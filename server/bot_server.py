@@ -120,7 +120,9 @@ def verify_init_data(init_data: str) -> bool:
 def send_to_admin(payload: Dict[str, Any]) -> None:
     chat_id = resolve_admin_chat_id()
     if not chat_id:
-        raise RuntimeError("Admin chat_id not resolved. Make sure admin started the bot.")
+        raise RuntimeError(
+            "Admin chat_id not resolved. Admin must open the bot and send /start."
+        )
     text = format_payload(payload)
     api_request(
         "sendMessage",
@@ -157,19 +159,32 @@ def handle_webapp_payload(body: Dict[str, Any]) -> Dict[str, Any]:
     if not payload:
         return {"ok": False, "error": "payload missing"}
 
-    send_to_admin(payload)
+    try:
+        send_to_admin(payload)
+    except Exception as error:
+        return {"ok": False, "error": str(error)}
 
     query_id = body.get("query_id")
     if query_id:
-        answer_webapp_query(query_id, "Спасибо! Мы получили вашу заявку.")
+        try:
+            answer_webapp_query(query_id, "Спасибо! Мы получили вашу заявку.")
+        except Exception:
+            # The lead is already delivered to admin; do not fail whole request.
+            pass
 
     return {"ok": True}
 
 
 def handle_telegram_update(update: Dict[str, Any]) -> None:
+    global ADMIN_CHAT_ID
     message = update.get("message") or update.get("edited_message")
     if not message:
         return
+
+    from_user = message.get("from") or {}
+    username = (from_user.get("username") or "").strip().lstrip("@")
+    if ADMIN_USERNAME and username and username.lower() == ADMIN_USERNAME.lower():
+        ADMIN_CHAT_ID = message["chat"]["id"]
 
     text = message.get("text", "")
     if text.startswith("/start"):
@@ -239,26 +254,29 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._send_json(404, {"ok": False, "error": "not found"})
 
     def do_POST(self) -> None:
-        length = int(self.headers.get("Content-Length", "0"))
-        raw = self.rfile.read(length)
         try:
-            body = json.loads(raw.decode("utf-8")) if raw else {}
-        except json.JSONDecodeError:
-            self._send_json(400, {"ok": False, "error": "invalid json"})
-            return
+            length = int(self.headers.get("Content-Length", "0"))
+            raw = self.rfile.read(length)
+            try:
+                body = json.loads(raw.decode("utf-8")) if raw else {}
+            except json.JSONDecodeError:
+                self._send_json(400, {"ok": False, "error": "invalid json"})
+                return
 
-        if self.path == "/webapp":
-            result = handle_webapp_payload(body)
-            status = 200 if result.get("ok") else 400
-            self._send_json(status, result)
-            return
+            if self.path == "/webapp":
+                result = handle_webapp_payload(body)
+                status = 200 if result.get("ok") else 400
+                self._send_json(status, result)
+                return
 
-        if self.path == "/telegram":
-            handle_telegram_update(body)
-            self._send_json(200, {"ok": True})
-            return
+            if self.path == "/telegram":
+                handle_telegram_update(body)
+                self._send_json(200, {"ok": True})
+                return
 
-        self._send_json(404, {"ok": False, "error": "not found"})
+            self._send_json(404, {"ok": False, "error": "not found"})
+        except Exception as error:
+            self._send_json(500, {"ok": False, "error": str(error)})
 
 
 def main() -> None:
