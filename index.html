@@ -13,6 +13,9 @@
   <body>
     <div class="lead-modal" id="leadModal" aria-hidden="true">
       <div class="lead-card" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
+        <button class="modal-close" type="button" id="leadClose" aria-label="Закрыть">
+          ×
+        </button>
         <div class="lead-header">
           <h2 id="leadTitle">Запросить расчет</h2>
           <p>Заполните короткую форму — это поможет быстрее подготовить предложение.</p>
@@ -60,7 +63,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button class="ghost-btn">Запросить аудит</button>
+          <button class="ghost-btn" type="button" data-action="open-lead">Запросить аудит</button>
         </div>
       </header>
 
@@ -72,8 +75,8 @@
             Привлечение трафика и автоматизация процессов для бизнеса.
           </p>
           <div class="hero-actions">
-            <button class="primary-btn">Запустить проект</button>
-            <button class="secondary-btn">Смотреть кейсы</button>
+            <button class="primary-btn" type="button" data-action="scroll-questions">Запустить проект</button>
+            <button class="secondary-btn" type="button" data-action="scroll-directions">Смотреть направления</button>
           </div>
           <div class="hero-stats">
             <div class="stat">
@@ -96,14 +99,14 @@
             <h3>Автоворонка под ключ</h3>
             <p>Стратегия, чат‑бот, контент и аналитика в одном решении.</p>
             <div class="card-price">от 190 000 ₽</div>
-            <button class="primary-btn">Получить предложение</button>
+            <button class="primary-btn" type="button" data-action="open-lead">Получить предложение</button>
           </div>
           <div class="hero-card secondary">
             <div class="card-badge">Быстрый старт</div>
             <h3>Рост канала</h3>
             <p>Трафик, упаковка и контент‑план для первых продаж.</p>
             <div class="card-price">от 65 000 ₽</div>
-            <button class="secondary-btn">Записаться</button>
+            <button class="secondary-btn" type="button" data-action="open-lead">Записаться</button>
           </div>
         </div>
       </section>
@@ -212,9 +215,9 @@
           <div class="brand-sub">Telegram Growth Agency</div>
         </div>
         <div class="footer-links">
-          <button class="ghost-btn">Поддержка</button>
-          <button class="ghost-btn">Партнерство</button>
-          <button class="ghost-btn">Документы</button>
+          <button class="ghost-btn" type="button" data-action="scroll-questions">Поддержка</button>
+          <button class="ghost-btn" type="button" data-action="open-lead">Партнерство</button>
+          <button class="ghost-btn" type="button" data-action="scroll-about">Документы</button>
         </div>
       </footer>
     </div>

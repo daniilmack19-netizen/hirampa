@@ -7,6 +7,8 @@ const questionInput = document.getElementById("questionInput");
 const leadModal = document.getElementById("leadModal");
 const leadForm = document.getElementById("leadForm");
 const leadSkip = document.getElementById("leadSkip");
+const leadClose = document.getElementById("leadClose");
+const actionButtons = document.querySelectorAll("[data-action]");
 
 const APP_BACKEND_URL = window.APP_CONFIG?.backendUrl || "";
 const LEAD_STORAGE_KEY = "leadFormCompleted_v1";
@@ -40,6 +42,28 @@ if (!addButtons.length && cartBar) {
 }
 
 const getWebApp = () => (window.Telegram ? window.Telegram.WebApp : null);
+const isTelegramContext = () => {
+  const webapp = getWebApp();
+  if (!webapp) return false;
+  if (typeof webapp.initData === "string" && webapp.initData.length > 0) return true;
+  return /Telegram/i.test(navigator.userAgent);
+};
+
+const storageGet = (key) => {
+  try {
+    return localStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+};
+
+const storageSet = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    // Ignore storage errors in restricted WebView contexts.
+  }
+};
 
 const fillLeadForm = () => {
   if (!leadForm) return;
@@ -71,16 +95,84 @@ const closeLeadModal = () => {
   document.body.style.overflow = "";
 };
 
-if (leadModal && !localStorage.getItem(LEAD_STORAGE_KEY)) {
+if (leadModal && isTelegramContext() && !storageGet(LEAD_STORAGE_KEY)) {
   setTimeout(openLeadModal, 300);
 }
 
 if (leadSkip) {
   leadSkip.addEventListener("click", () => {
-    localStorage.setItem(LEAD_STORAGE_KEY, "1");
+    storageSet(LEAD_STORAGE_KEY, "1");
     closeLeadModal();
   });
 }
+
+if (leadClose) {
+  leadClose.addEventListener("click", closeLeadModal);
+}
+
+if (leadModal) {
+  leadModal.addEventListener("click", (event) => {
+    if (event.target === leadModal) {
+      closeLeadModal();
+    }
+  });
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeLeadModal();
+  }
+});
+
+const scrollToSection = (selector) => {
+  const section = document.querySelector(selector);
+  if (section) {
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+};
+
+actionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const action = button.dataset.action;
+    if (action === "open-lead") {
+      openLeadModal();
+      return;
+    }
+    if (action === "scroll-questions") {
+      scrollToSection("#questions");
+      return;
+    }
+    if (action === "scroll-directions") {
+      scrollToSection("#directions");
+      return;
+    }
+    if (action === "scroll-about") {
+      scrollToSection("#about");
+    }
+  });
+});
+
+const sendPayload = async (payload) => {
+  const webapp = getWebApp();
+  const queryId = webapp?.initDataUnsafe?.query_id;
+  if (APP_BACKEND_URL) {
+    await fetch(`${APP_BACKEND_URL}/webapp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query_id: queryId || "",
+        init_data: webapp?.initData || "",
+        payload,
+      }),
+    });
+    return;
+  }
+  if (webapp && webapp.sendData) {
+    webapp.sendData(JSON.stringify(payload));
+    return;
+  }
+  throw new Error("No transport for payload");
+};
 
 if (leadForm) {
   leadForm.addEventListener("submit", async (event) => {
@@ -99,23 +191,10 @@ if (leadForm) {
     if (webapp?.initDataUnsafe?.user) {
       payload.user = webapp.initDataUnsafe.user;
     }
-    const queryId = webapp?.initDataUnsafe?.query_id;
 
     try {
-      if (queryId && APP_BACKEND_URL) {
-        await fetch(`${APP_BACKEND_URL}/webapp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query_id: queryId,
-            init_data: webapp?.initData || "",
-            payload,
-          }),
-        });
-      } else if (webapp && webapp.sendData) {
-        webapp.sendData(JSON.stringify(payload));
-      }
-      localStorage.setItem(LEAD_STORAGE_KEY, "1");
+      await sendPayload(payload);
+      storageSet(LEAD_STORAGE_KEY, "1");
       closeLeadModal();
       if (webapp) {
         webapp.showAlert("Спасибо! Мы получили запрос.");
@@ -131,28 +210,6 @@ if (leadForm) {
     }
   });
 }
-
-const sendPayload = async (payload) => {
-  const webapp = getWebApp();
-  const queryId = webapp?.initDataUnsafe?.query_id;
-  if (queryId && APP_BACKEND_URL) {
-    await fetch(`${APP_BACKEND_URL}/webapp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query_id: queryId,
-        init_data: webapp?.initData || "",
-        payload,
-      }),
-    });
-    return;
-  }
-  if (webapp && webapp.sendData) {
-    webapp.sendData(JSON.stringify(payload));
-    return;
-  }
-  throw new Error("No transport for payload");
-};
 
 const sendQuestionToBot = async (message) => {
   const payload = { type: "question", message, created_at: new Date().toISOString() };
