@@ -168,17 +168,29 @@ const sendPayload = async (payload) => {
   const webapp = getWebApp();
   const queryId = webapp?.initDataUnsafe?.query_id;
   if (APP_BACKEND_URL) {
-    const response = await fetch(`${APP_BACKEND_URL}/webapp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query_id: queryId || "",
-        init_data: webapp?.initData || "",
-        payload,
-      }),
-    });
-    if (!response.ok) {
-      throw new Error(`Backend error: ${response.status}`);
+    const envelope = {
+      query_id: queryId || "",
+      init_data: webapp?.initData || "",
+      payload,
+    };
+    try {
+      const response = await fetch(`${APP_BACKEND_URL}/webapp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(envelope),
+      });
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.status}`);
+      }
+      return;
+    } catch (error) {
+      // Fallback for strict CORS deployments: fire-and-forget delivery.
+      await fetch(`${APP_BACKEND_URL}/webapp`, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: JSON.stringify(envelope),
+      });
     }
     return;
   }
