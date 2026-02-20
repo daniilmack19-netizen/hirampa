@@ -1,0 +1,2 @@
+# Backend currently uses only Python standard library modules.
+# Keep this file so hosting platforms can run: pip install -r requirements.txt
