@@ -13,7 +13,7 @@ window.APP_CONFIG = {
 ## Бот + сервер для заявок
 Чтобы заявки уходили админу в личку, нужен небольшой сервер и бот.
 
-### 1) Настройка
+### 1) Настройка через `config.json` (локально)
 Скопируйте пример и заполните:
 ```bash
 cp /Users/daniilrylcev/Documents/New\ project\ 2/server/config.example.json \
@@ -25,15 +25,23 @@ cp /Users/daniilrylcev/Documents/New\ project\ 2/server/config.example.json \
 - `webapp_url` — URL вашего WebApp
 - `public_base_url` — публичный адрес сервера (HTTPS)
 
+### 2) Настройка через env (для Render/Railway)
+Можно не создавать `config.json`, а задать переменные окружения:
+- `BOT_TOKEN`
+- `ADMIN_USERNAME`
+- `WEBAPP_URL`
+- `PUBLIC_BASE_URL`
+- `PORT` (обычно выставляет сам хостинг)
+
 Важно: админ должен **написать боту /start**, иначе бот не сможет отправить ему сообщение.
 
-### 2) Запуск сервера
+### 3) Запуск сервера
 ```bash
 python3 /Users/daniilrylcev/Documents/New\ project\ 2/server/bot_server.py
 ```
 Сервер слушает `/webapp` (для WebApp) и `/telegram` (для webhook Telegram).
 
-### 3) Настройка webhook
+### 4) Настройка webhook
 ```bash
 python3 /Users/daniilrylcev/Documents/New\ project\ 2/server/set_webhook.py
 ```

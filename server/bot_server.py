@@ -10,24 +10,29 @@ from typing import Any, Dict, Optional
 BASE_DIR = os.path.dirname(__file__)
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 
-if not os.path.exists(CONFIG_PATH):
-    raise SystemExit(
-        "config.json not found. Copy server/config.example.json to server/config.json and fill it."
-    )
+CONFIG: Dict[str, Any] = {}
+if os.path.exists(CONFIG_PATH):
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        CONFIG = json.load(f)
 
-with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-    CONFIG = json.load(f)
 
-BOT_TOKEN = CONFIG.get("bot_token", "").strip()
-ADMIN_USERNAME = CONFIG.get("admin_username", "").strip().lstrip("@")
-ADMIN_CHAT_ID = CONFIG.get("admin_chat_id")
-WEBAPP_URL = CONFIG.get("webapp_url", "").strip()
-LISTEN_HOST = CONFIG.get("listen_host", "0.0.0.0")
-LISTEN_PORT = int(CONFIG.get("listen_port", 8080))
-VERIFY_INIT_DATA = bool(CONFIG.get("verify_init_data", False))
+def cfg(name: str, default: Any = "") -> Any:
+    env_name = name.upper()
+    if env_name in os.environ and os.environ[env_name] != "":
+        return os.environ[env_name]
+    return CONFIG.get(name, default)
+
+
+BOT_TOKEN = str(cfg("bot_token", "")).strip()
+ADMIN_USERNAME = str(cfg("admin_username", "")).strip().lstrip("@")
+ADMIN_CHAT_ID = cfg("admin_chat_id")
+WEBAPP_URL = str(cfg("webapp_url", "")).strip()
+LISTEN_HOST = str(cfg("listen_host", "0.0.0.0"))
+LISTEN_PORT = int(os.getenv("PORT", cfg("listen_port", 8080)))
+VERIFY_INIT_DATA = str(cfg("verify_init_data", "false")).lower() in {"1", "true", "yes"}
 
 if not BOT_TOKEN:
-    raise SystemExit("bot_token is required in server/config.json")
+    raise SystemExit("bot_token is required (env BOT_TOKEN or server/config.json)")
 
 API_BASE = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
